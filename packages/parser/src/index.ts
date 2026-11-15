@@ -94,3 +94,6 @@ export function parseDocument(
   const { document } = parseHTML(html);
   return document;
 }
+
+// Content-language detection over page text (squirrelscan/repo#2360)
+export * from "./language";

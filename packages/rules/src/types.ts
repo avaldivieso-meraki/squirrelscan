@@ -46,7 +46,7 @@ import type {
   Soft404Confirmation,
   Soft404Signal,
 } from "@squirrelscan/parser";
-import type { AuthorInfo, SchemaCollection } from "@squirrelscan/parser";
+import type { AuthorInfo, ContentLanguageView, SchemaCollection } from "@squirrelscan/parser";
 import type { TlsProbeFn } from "@squirrelscan/utils/tls-certificate";
 import type { Document } from "linkedom";
 
@@ -664,6 +664,17 @@ export interface SiteData {
     finalUrl?: string;
     statusCode: number;
     parsed: ParsedPage;
+
+  /**
+   * The language the page is written in, detected from its main content text
+   * (squirrelscan/repo#2360): `page()` for the whole main content, `blocks()`
+   * per block, each `{ lang, confidence }` or null where the detector abstains
+   * (short text, low confidence). Lazy and memoised per page, so a run whose
+   * rules never read it pays nothing. Page rules only; undefined elsewhere
+   * (site rules, tests, embedders), which a rule reads as "not detected".
+   * Distinct from the DECLARED language (`<html lang>`).
+   */
+  contentLanguage?: ContentLanguageView;
     headers?: Record<string, string>;
     redirectChain?: RedirectChain;
     /**
