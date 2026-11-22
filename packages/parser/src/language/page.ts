@@ -9,8 +9,8 @@
 
 import type { Document, Element, Node } from "linkedom";
 
-import { collectTextExcluding } from "../extractors/dom-text";
 import { getMainContentWithRoot } from "../extractors/content";
+import { collectTextExcluding } from "../extractors/dom-text";
 import {
   withLanguageFloor,
   type DetectedLanguage,
@@ -19,9 +19,8 @@ import {
 import { createFrancDetector, FRANC_WEB_LANGUAGES } from "./franc";
 
 /** The production detector: franc over the web language list, behind the abstention floor. */
-export const defaultContentLanguageDetector: LanguageDetector = withLanguageFloor(
-  createFrancDetector({ only: FRANC_WEB_LANGUAGES }),
-);
+export const defaultContentLanguageDetector: LanguageDetector =
+  withLanguageFloor(createFrancDetector({ only: FRANC_WEB_LANGUAGES }));
 
 /** Detect the language `text` is written in with the production detector; null = abstained. */
 export function detectContentLanguage(text: string): DetectedLanguage | null {
@@ -88,11 +87,17 @@ const SEPARATED_TAGS = new Set([
 
 const tagOf = (el: Element): string => el.tagName?.toLowerCase() ?? "";
 const isExcluded = (el: Element): boolean =>
-  LANGUAGE_EXCLUDED_TAGS.has(tagOf(el)) || el.getAttribute?.("aria-hidden") === "true";
+  LANGUAGE_EXCLUDED_TAGS.has(tagOf(el)) ||
+  el.getAttribute?.("aria-hidden") === "true";
 const isSeparated = (el: Element): boolean => SEPARATED_TAGS.has(tagOf(el));
 
 function languageText(root: Element): string {
-  return collectTextExcluding(root as unknown as Node, isExcluded, " ", isSeparated);
+  return collectTextExcluding(
+    root as unknown as Node,
+    isExcluded,
+    " ",
+    isSeparated
+  );
 }
 
 /**
@@ -161,12 +166,14 @@ function collectBlocks(root: Element, max: number): Element[] {
  */
 export function createContentLanguageView(
   source: ContentLanguageSource,
-  detector: LanguageDetector = defaultContentLanguageDetector,
+  detector: LanguageDetector = defaultContentLanguageDetector
 ): ContentLanguageView {
   let root: Element | null | undefined;
   const mainRoot = (): Element | null => {
     if (root === undefined) {
-      root = source.document ? getMainContentWithRoot(source.document).root : null;
+      root = source.document
+        ? getMainContentWithRoot(source.document).root
+        : null;
     }
     return root;
   };
@@ -180,7 +187,9 @@ export function createContentLanguageView(
     page() {
       if (!pageDone) {
         const el = mainRoot();
-        const text = el ? languageText(el) : (source.content?.textContent ?? "");
+        const text = el
+          ? languageText(el)
+          : (source.content?.textContent ?? "");
         pageResult = detector.detectLanguage(text);
         pageDone = true;
       }
@@ -190,12 +199,14 @@ export function createContentLanguageView(
       if (!blockResult) {
         const el = mainRoot();
         blockResult = el
-          ? collectBlocks(el, CONTENT_LANGUAGE_MAX_BLOCKS).map((block, index) => ({
-              index,
-              tag: tagOf(block),
-              element: block,
-              language: detector.detectLanguage(languageText(block)),
-            }))
+          ? collectBlocks(el, CONTENT_LANGUAGE_MAX_BLOCKS).map(
+              (block, index) => ({
+                index,
+                tag: tagOf(block),
+                element: block,
+                language: detector.detectLanguage(languageText(block)),
+              })
+            )
           : [];
       }
       return blockResult;

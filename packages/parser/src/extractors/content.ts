@@ -120,7 +120,10 @@ export function getMainContent(doc: Document): string {
  * selector match with over 100 characters of text, else the body (`root` is
  * null when there is no body). `getMainContent` is this without the root.
  */
-export function getMainContentWithRoot(doc: Document): { text: string; root: Element | null } {
+export function getMainContentWithRoot(doc: Document): {
+  text: string;
+  root: Element | null;
+} {
   // Try to find main content area
   const mainSelectors = [
     "article",

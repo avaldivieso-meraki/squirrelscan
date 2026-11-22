@@ -74,7 +74,7 @@ export function prepareLanguageText(text: string): string {
  */
 export function withLanguageFloor(
   inner: LanguageDetector,
-  floor: LanguageFloor = DEFAULT_LANGUAGE_FLOOR,
+  floor: LanguageFloor = DEFAULT_LANGUAGE_FLOOR
 ): LanguageDetector {
   return {
     id: inner.id,
@@ -83,7 +83,12 @@ export function withLanguageFloor(
       if (prepared.length < floor.minChars) return null;
       const result = inner.detectLanguage(prepared);
       // Written so a NaN confidence abstains too.
-      if (!result || Number.isNaN(result.confidence) || result.confidence < floor.minConfidence) return null;
+      if (
+        !result ||
+        Number.isNaN(result.confidence) ||
+        result.confidence < floor.minConfidence
+      )
+        return null;
       return result;
     },
   };
@@ -104,7 +109,9 @@ const TAG_ALIASES: Record<string, string> = {
  * aliases folded ("en-US" -> "en", "iw" -> "he", "no" -> "nb"). Returns null for
  * an empty or malformed tag.
  */
-export function normalizeLanguageTag(tag: string | null | undefined): string | null {
+export function normalizeLanguageTag(
+  tag: string | null | undefined
+): string | null {
   if (!tag) return null;
   const primary = tag.trim().toLowerCase().split(/[-_]/)[0];
   if (!primary || !/^[a-z]{2,3}$/.test(primary)) return null;

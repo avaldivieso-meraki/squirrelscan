@@ -31,7 +31,9 @@ const ES =
   "La ardilla escondió doce bellotas debajo del viejo roble antes de que llegara la primera nieve del invierno al valle. Después durmió todo el día en su nido, mientras los niños del pueblo jugaban con trineos en la colina.";
 
 /** A detector that always answers the same thing and counts its calls. */
-function fixed(result: DetectedLanguage | null): LanguageDetector & { calls: string[] } {
+function fixed(
+  result: DetectedLanguage | null
+): LanguageDetector & { calls: string[] } {
   const calls: string[] = [];
   return {
     id: "fixed",
@@ -53,8 +55,18 @@ describe("withLanguageFloor", () => {
 
   test("abstains below the confidence floor and answers at or above it", () => {
     const floor = { minChars: 1, minConfidence: 0.5 };
-    expect(withLanguageFloor(fixed({ lang: "en", confidence: 0.49 }), floor).detectLanguage(EN)).toBeNull();
-    expect(withLanguageFloor(fixed({ lang: "en", confidence: 0.5 }), floor).detectLanguage(EN)).toEqual({
+    expect(
+      withLanguageFloor(
+        fixed({ lang: "en", confidence: 0.49 }),
+        floor
+      ).detectLanguage(EN)
+    ).toBeNull();
+    expect(
+      withLanguageFloor(
+        fixed({ lang: "en", confidence: 0.5 }),
+        floor
+      ).detectLanguage(EN)
+    ).toEqual({
       lang: "en",
       confidence: 0.5,
     });
@@ -62,24 +74,36 @@ describe("withLanguageFloor", () => {
 
   test("abstains on a NaN confidence and when the inner detector abstains", () => {
     const floor = { minChars: 1, minConfidence: 0 };
-    expect(withLanguageFloor(fixed({ lang: "en", confidence: Number.NaN }), floor).detectLanguage(EN)).toBeNull();
+    expect(
+      withLanguageFloor(
+        fixed({ lang: "en", confidence: Number.NaN }),
+        floor
+      ).detectLanguage(EN)
+    ).toBeNull();
     expect(withLanguageFloor(fixed(null), floor).detectLanguage(EN)).toBeNull();
   });
 
   test("hands the inner detector collapsed, capped text", () => {
     const inner = fixed({ lang: "en", confidence: 1 });
     withLanguageFloor(inner, { minChars: 1, minConfidence: 0 }).detectLanguage(
-      `  a\n\n b\t${"x".repeat(CONTENT_LANGUAGE_MAX_CHARS * 2)}`,
+      `  a\n\n b\t${"x".repeat(CONTENT_LANGUAGE_MAX_CHARS * 2)}`
     );
     expect(inner.calls[0].startsWith("a b x")).toBe(true);
     expect(inner.calls[0]).toHaveLength(CONTENT_LANGUAGE_MAX_CHARS);
   });
 
   test("the default floor uses the placeholder constants", () => {
-    const inner = fixed({ lang: "en", confidence: CONTENT_LANGUAGE_MIN_CONFIDENCE });
+    const inner = fixed({
+      lang: "en",
+      confidence: CONTENT_LANGUAGE_MIN_CONFIDENCE,
+    });
     const d = withLanguageFloor(inner);
-    expect(d.detectLanguage("a".repeat(CONTENT_LANGUAGE_MIN_CHARS - 1))).toBeNull();
-    expect(d.detectLanguage("a".repeat(CONTENT_LANGUAGE_MIN_CHARS))).not.toBeNull();
+    expect(
+      d.detectLanguage("a".repeat(CONTENT_LANGUAGE_MIN_CHARS - 1))
+    ).toBeNull();
+    expect(
+      d.detectLanguage("a".repeat(CONTENT_LANGUAGE_MIN_CHARS))
+    ).not.toBeNull();
   });
 });
 
@@ -129,7 +153,9 @@ describe("createContentLanguageView", () => {
 
   test("detects the main content, not the declared language or the chrome", () => {
     const view = createContentLanguageView(
-      page(`<nav>${EN} ${EN}</nav><main><p>${DE}</p><p>${DE}</p></main><footer>${EN}</footer>`),
+      page(
+        `<nav>${EN} ${EN}</nav><main><p>${DE}</p><p>${DE}</p></main><footer>${EN}</footer>`
+      )
     );
     expect(view.detectorId).toBe("franc");
     expect(view.page()?.lang).toBe("de");
@@ -137,17 +163,27 @@ describe("createContentLanguageView", () => {
 
   test("reports per-block languages in document order, outermost block only", () => {
     const view = createContentLanguageView(
-      page(`<main><h1>Hi</h1><p>${EN}</p><ul><li><p>${FR}</p></li></ul><pre>${ES}</pre><p>${ES}</p></main>`),
+      page(
+        `<main><h1>Hi</h1><p>${EN}</p><ul><li><p>${FR}</p></li></ul><pre>${ES}</pre><p>${ES}</p></main>`
+      )
     );
     const blocks = view.blocks();
     expect(blocks.map((b) => b.tag)).toEqual(["h1", "p", "li", "p"]);
-    expect(blocks.map((b) => b.language?.lang ?? null)).toEqual([null, "en", "fr", "es"]);
+    expect(blocks.map((b) => b.language?.lang ?? null)).toEqual([
+      null,
+      "en",
+      "fr",
+      "es",
+    ]);
     expect(blocks.map((b) => b.index)).toEqual([0, 1, 2, 3]);
   });
 
   test("is lazy and memoised: nothing runs until asked, then at most once", () => {
     const inner = fixed({ lang: "xx", confidence: 1 });
-    const view = createContentLanguageView(page(`<main><p>${EN}</p><p>${FR}</p></main>`), inner);
+    const view = createContentLanguageView(
+      page(`<main><p>${EN}</p><p>${FR}</p></main>`),
+      inner
+    );
     expect(inner.calls).toHaveLength(0);
     expect(view.page()).toEqual({ lang: "xx", confidence: 1 });
     view.page();
@@ -158,13 +194,19 @@ describe("createContentLanguageView", () => {
   });
 
   test("abstention surfaces as null at page and block level", () => {
-    const view = createContentLanguageView(page(`<main><p>${EN}</p></main>`), fixed(null));
+    const view = createContentLanguageView(
+      page(`<main><p>${EN}</p></main>`),
+      fixed(null)
+    );
     expect(view.page()).toBeNull();
     expect(view.blocks()[0].language).toBeNull();
   });
 
   test("without a DOM it reads stored text content and reports no blocks", () => {
-    const view = createContentLanguageView({ document: null, content: { textContent: `${FR} ${FR}` } });
+    const view = createContentLanguageView({
+      document: null,
+      content: { textContent: `${FR} ${FR}` },
+    });
     expect(view.page()?.lang).toBe("fr");
     expect(view.blocks()).toEqual([]);
     expect(createContentLanguageView({ document: null }).page()).toBeNull();

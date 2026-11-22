@@ -11,7 +11,11 @@ import { readdirSync, readFileSync, statSync } from "node:fs";
 import { extname, join } from "node:path";
 
 import { parseHTML } from "../dom";
-import { normalizeLanguageTag, prepareLanguageText, type LanguageDetector } from "./detector";
+import {
+  normalizeLanguageTag,
+  prepareLanguageText,
+  type LanguageDetector,
+} from "./detector";
 import { mainContentLanguageText } from "./page";
 
 /** One labelled sample, in memory only. */
@@ -23,7 +27,9 @@ export interface BenchmarkSample {
 }
 
 /** Upper bounds (exclusive) of the text-length buckets, in characters of prepared text. */
-export const LENGTH_BUCKET_BOUNDS = [20, 40, 80, 160, 320, 640, 1280, 2560] as const;
+export const LENGTH_BUCKET_BOUNDS = [
+  20, 40, 80, 160, 320, 640, 1280, 2560,
+] as const;
 /** Width of one confidence-histogram bucket. */
 export const CONFIDENCE_BUCKET_WIDTH = 0.025;
 /** A suggested floor must keep at least this many answers, so a handful of samples cannot set it. */
@@ -84,7 +90,14 @@ export interface DetectorReport {
   };
   perLanguage: Record<string, LanguageScore>;
   byLength: LengthBucketScore[];
-  latencyMs: { mean: number; p50: number; p95: number; p99: number; max: number; total: number };
+  latencyMs: {
+    mean: number;
+    p50: number;
+    p95: number;
+    p99: number;
+    max: number;
+    total: number;
+  };
   confidenceHistogram: ConfidenceBucket[];
   suggestedFloor: SuggestedFloor;
 }
@@ -110,11 +123,15 @@ const round = (n: number, digits = 4): number => {
   const f = 10 ** digits;
   return Math.round(n * f) / f;
 };
-const ratio = (a: number, b: number): number | null => (b > 0 ? round(a / b) : null);
+const ratio = (a: number, b: number): number | null =>
+  b > 0 ? round(a / b) : null;
 
 function percentile(sorted: number[], p: number): number {
   if (sorted.length === 0) return 0;
-  const idx = Math.min(sorted.length - 1, Math.max(0, Math.ceil((p / 100) * sorted.length) - 1));
+  const idx = Math.min(
+    sorted.length - 1,
+    Math.max(0, Math.ceil((p / 100) * sorted.length) - 1)
+  );
   return sorted[idx];
 }
 
@@ -135,7 +152,8 @@ function scoreLanguages(outcomes: Outcome[]): Record<string, LanguageScore> {
   const tp = new Map<string, number>();
   for (const o of outcomes) {
     support.set(o.gold, (support.get(o.gold) ?? 0) + 1);
-    if (o.predicted) predicted.set(o.predicted, (predicted.get(o.predicted) ?? 0) + 1);
+    if (o.predicted)
+      predicted.set(o.predicted, (predicted.get(o.predicted) ?? 0) + 1);
     if (o.predicted === o.gold) tp.set(o.gold, (tp.get(o.gold) ?? 0) + 1);
   }
   const langs = [...new Set([...support.keys(), ...predicted.keys()])].sort();
@@ -158,17 +176,27 @@ function scoreLanguages(outcomes: Outcome[]): Record<string, LanguageScore> {
 }
 
 /** Lowest confidence at which the kept answers meet `target`, or null; `answered` sorted by confidence ascending. */
-function lowestConfidenceFor(answered: Outcome[], target: number): { minConfidence: number; kept: number; correct: number } | null {
+function lowestConfidenceFor(
+  answered: Outcome[],
+  target: number
+): { minConfidence: number; kept: number; correct: number } | null {
   let correctAbove = answered.filter((o) => o.predicted === o.gold).length;
   for (let i = 0; i < answered.length; i++) {
     const kept = answered.length - i;
     if (kept < MIN_BUCKET_SUPPORT) return null;
     if (correctAbove / kept >= target) {
-      return { minConfidence: answered[i].confidence, kept, correct: correctAbove };
+      return {
+        minConfidence: answered[i].confidence,
+        kept,
+        correct: correctAbove,
+      };
     }
     if (answered[i].predicted === answered[i].gold) correctAbove--;
     // Ties share a threshold: skip to the last sample with this confidence.
-    while (i + 1 < answered.length && answered[i + 1].confidence === answered[i].confidence) {
+    while (
+      i + 1 < answered.length &&
+      answered[i + 1].confidence === answered[i].confidence
+    ) {
       i++;
       if (answered[i].predicted === answered[i].gold) correctAbove--;
     }
@@ -193,7 +221,7 @@ function suggestFloor(outcomes: Outcome[], target: number): SuggestedFloor {
     const minChars = bucketLowerBound(i);
     const found = lowestConfidenceFor(
       answered.filter((o) => o.length >= minChars),
-      target,
+      target
     );
     if (!found || found.kept <= bestKept) continue;
     bestKept = found.kept;
@@ -206,11 +234,22 @@ function suggestFloor(outcomes: Outcome[], target: number): SuggestedFloor {
     };
   }
   return (
-    best ?? { targetPrecision: target, minChars: null, minConfidence: null, precisionAtFloor: null, coverageAtFloor: null }
+    best ?? {
+      targetPrecision: target,
+      minChars: null,
+      minConfidence: null,
+      precisionAtFloor: null,
+      coverageAtFloor: null,
+    }
   );
 }
 
-function reportFor(id: string, outcomes: Outcome[], latencies: number[], target: number): DetectorReport {
+function reportFor(
+  id: string,
+  outcomes: Outcome[],
+  latencies: number[],
+  target: number
+): DetectorReport {
   const answered = outcomes.filter((o) => o.predicted !== null).length;
   const correct = outcomes.filter((o) => o.predicted === o.gold).length;
   const perLanguage = scoreLanguages(outcomes);
@@ -218,11 +257,14 @@ function reportFor(id: string, outcomes: Outcome[], latencies: number[], target:
     .filter((s) => s.support > 0)
     .map((s) => s.f1 ?? 0);
 
-  const lengthCounts = Array.from({ length: LENGTH_BUCKET_BOUNDS.length + 1 }, () => ({
-    support: 0,
-    correct: 0,
-    abstained: 0,
-  }));
+  const lengthCounts = Array.from(
+    { length: LENGTH_BUCKET_BOUNDS.length + 1 },
+    () => ({
+      support: 0,
+      correct: 0,
+      abstained: 0,
+    })
+  );
   for (const o of outcomes) {
     const b = lengthCounts[lengthBucketIndex(o.length)];
     b.support++;
@@ -238,15 +280,21 @@ function reportFor(id: string, outcomes: Outcome[], latencies: number[], target:
   }));
 
   const nBuckets = Math.round(1 / CONFIDENCE_BUCKET_WIDTH);
-  const histogram: ConfidenceBucket[] = Array.from({ length: nBuckets }, (_, i) => ({
-    min: round(i * CONFIDENCE_BUCKET_WIDTH),
-    max: round((i + 1) * CONFIDENCE_BUCKET_WIDTH),
-    correct: 0,
-    incorrect: 0,
-  }));
+  const histogram: ConfidenceBucket[] = Array.from(
+    { length: nBuckets },
+    (_, i) => ({
+      min: round(i * CONFIDENCE_BUCKET_WIDTH),
+      max: round((i + 1) * CONFIDENCE_BUCKET_WIDTH),
+      correct: 0,
+      incorrect: 0,
+    })
+  );
   for (const o of outcomes) {
     if (o.predicted === null) continue;
-    const i = Math.min(nBuckets - 1, Math.max(0, Math.floor(o.confidence / CONFIDENCE_BUCKET_WIDTH)));
+    const i = Math.min(
+      nBuckets - 1,
+      Math.max(0, Math.floor(o.confidence / CONFIDENCE_BUCKET_WIDTH))
+    );
     if (o.predicted === o.gold) histogram[i].correct++;
     else histogram[i].incorrect++;
   }
@@ -261,7 +309,10 @@ function reportFor(id: string, outcomes: Outcome[], latencies: number[], target:
       abstained: outcomes.length - answered,
       accuracy: ratio(correct, outcomes.length),
       precision: ratio(correct, answered),
-      macroF1: goldF1.length > 0 ? round(goldF1.reduce((a, b) => a + b, 0) / goldF1.length) : null,
+      macroF1:
+        goldF1.length > 0
+          ? round(goldF1.reduce((a, b) => a + b, 0) / goldF1.length)
+          : null,
     },
     perLanguage,
     byLength,
@@ -291,7 +342,7 @@ export interface BenchmarkOptions {
 export function runLanguageBenchmark(
   samples: Iterable<BenchmarkSample>,
   detectors: readonly LanguageDetector[],
-  options: BenchmarkOptions = {},
+  options: BenchmarkOptions = {}
 ): BenchmarkReport {
   const target = options.targetPrecision ?? 0.95;
   const outcomes = detectors.map(() => [] as Outcome[]);
@@ -325,9 +376,13 @@ export function runLanguageBenchmark(
   return {
     schema: "squirrelscan.content-language-benchmark/v1",
     samples: count,
-    samplesPerLanguage: Object.fromEntries([...perLanguage.entries()].sort(([a], [b]) => a.localeCompare(b))),
+    samplesPerLanguage: Object.fromEntries(
+      [...perLanguage.entries()].sort(([a], [b]) => a.localeCompare(b))
+    ),
     skipped,
-    detectors: detectors.map((d, i) => reportFor(d.id, outcomes[i], latencies[i], target)),
+    detectors: detectors.map((d, i) =>
+      reportFor(d.id, outcomes[i], latencies[i], target)
+    ),
   };
 }
 
@@ -366,7 +421,10 @@ export interface CorpusLoadStats {
  *
  * @yields {BenchmarkSample} One labelled sample per usable record, in sorted path order.
  */
-export function* loadLanguageCorpus(dir: string, stats?: CorpusLoadStats): Generator<BenchmarkSample> {
+export function* loadLanguageCorpus(
+  dir: string,
+  stats?: CorpusLoadStats
+): Generator<BenchmarkSample> {
   const counts = stats ?? { unreadable: 0 };
   for (const path of walkFiles(dir)) {
     const ext = extname(path).toLowerCase();
@@ -381,10 +439,18 @@ export function* loadLanguageCorpus(dir: string, stats?: CorpusLoadStats): Gener
       for (const line of raw.split("\n")) {
         if (!line.trim()) continue;
         try {
-          const rec = JSON.parse(line) as { lang?: unknown; text?: unknown; html?: unknown };
+          const rec = JSON.parse(line) as {
+            lang?: unknown;
+            text?: unknown;
+            html?: unknown;
+          };
           const lang = typeof rec.lang === "string" ? rec.lang : "";
           const text =
-            typeof rec.text === "string" ? rec.text : typeof rec.html === "string" ? htmlToText(rec.html) : "";
+            typeof rec.text === "string"
+              ? rec.text
+              : typeof rec.html === "string"
+                ? htmlToText(rec.html)
+                : "";
           yield { lang, text };
         } catch {
           counts.unreadable++;
@@ -398,14 +464,18 @@ export function* loadLanguageCorpus(dir: string, stats?: CorpusLoadStats): Gener
     if (parts.length < 2) continue; // a file at the top level has no label directory
     try {
       const body = readFileSync(path, "utf8");
-      yield { lang: parts[0], text: HTML_EXTENSIONS.has(ext) ? htmlToText(body) : body };
+      yield {
+        lang: parts[0],
+        text: HTML_EXTENSIONS.has(ext) ? htmlToText(body) : body,
+      };
     } catch {
       counts.unreadable++;
     }
   }
 }
 
-const pct = (n: number | null): string => (n === null ? "n/a" : `${(n * 100).toFixed(1)}%`);
+const pct = (n: number | null): string =>
+  n === null ? "n/a" : `${(n * 100).toFixed(1)}%`;
 
 /**
  * Render a report as markdown tables (aggregates only, the same fields as the
@@ -414,28 +484,42 @@ const pct = (n: number | null): string => (n === null ? "n/a" : `${(n * 100).toF
 export function formatBenchmarkTable(report: BenchmarkReport): string {
   const lines: string[] = [];
   lines.push(`Samples: ${report.samples} (skipped ${report.skipped})`, "");
-  lines.push("| detector | accuracy | precision | macro F1 | abstained | p50 ms | p95 ms | floor chars | floor confidence | precision at floor | coverage at floor |");
+  lines.push(
+    "| detector | accuracy | precision | macro F1 | abstained | p50 ms | p95 ms | floor chars | floor confidence | precision at floor | coverage at floor |"
+  );
   lines.push("|---|---|---|---|---|---|---|---|---|---|---|");
   for (const d of report.detectors) {
     const f = d.suggestedFloor;
     lines.push(
-      `| ${d.id} | ${pct(d.overall.accuracy)} | ${pct(d.overall.precision)} | ${d.overall.macroF1 ?? "n/a"} | ${d.overall.abstained} | ${d.latencyMs.p50} | ${d.latencyMs.p95} | ${f.minChars ?? "n/a"} | ${f.minConfidence ?? "n/a"} | ${pct(f.precisionAtFloor)} | ${pct(f.coverageAtFloor)} |`,
+      `| ${d.id} | ${pct(d.overall.accuracy)} | ${pct(d.overall.precision)} | ${d.overall.macroF1 ?? "n/a"} | ${d.overall.abstained} | ${d.latencyMs.p50} | ${d.latencyMs.p95} | ${f.minChars ?? "n/a"} | ${f.minConfidence ?? "n/a"} | ${pct(f.precisionAtFloor)} | ${pct(f.coverageAtFloor)} |`
     );
   }
   const langs = Object.keys(report.samplesPerLanguage);
-  lines.push("", `| lang | samples | ${report.detectors.map((d) => `${d.id} F1`).join(" | ")} |`);
+  lines.push(
+    "",
+    `| lang | samples | ${report.detectors.map((d) => `${d.id} F1`).join(" | ")} |`
+  );
   lines.push(`|---|---|${report.detectors.map(() => "---").join("|")}|`);
   for (const lang of langs) {
-    const cells = report.detectors.map((d) => String(d.perLanguage[lang]?.f1 ?? "n/a"));
-    lines.push(`| ${lang} | ${report.samplesPerLanguage[lang]} | ${cells.join(" | ")} |`);
+    const cells = report.detectors.map((d) =>
+      String(d.perLanguage[lang]?.f1 ?? "n/a")
+    );
+    lines.push(
+      `| ${lang} | ${report.samplesPerLanguage[lang]} | ${cells.join(" | ")} |`
+    );
   }
   const first = report.detectors[0];
   if (first) {
-    lines.push("", `| length bucket | samples | ${report.detectors.map((d) => `${d.id} accuracy`).join(" | ")} |`);
+    lines.push(
+      "",
+      `| length bucket | samples | ${report.detectors.map((d) => `${d.id} accuracy`).join(" | ")} |`
+    );
     lines.push(`|---|---|${report.detectors.map(() => "---").join("|")}|`);
     for (const [i, b] of first.byLength.entries()) {
       const label = `${b.minChars}-${b.maxChars === null ? "" : b.maxChars - 1}`;
-      const cells = report.detectors.map((d) => pct(d.byLength[i]?.accuracy ?? null));
+      const cells = report.detectors.map((d) =>
+        pct(d.byLength[i]?.accuracy ?? null)
+      );
       lines.push(`| ${label} | ${b.support} | ${cells.join(" | ")} |`);
     }
   }
