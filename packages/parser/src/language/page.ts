@@ -1,10 +1,10 @@
-// Per-page and per-block content language for the rule context
-// (squirrelscan/repo#2360). Lazy and memoised: nothing is detected until a rule
-// asks, and each page is detected at most once however many rules ask.
+// Per-page and per-block content language for the rule context. Lazy and
+// memoised: nothing is detected until a rule asks, and each page is detected at
+// most once however many rules ask.
 //
 // The text comes from the main content root (`getMainContentWithRoot`): site
 // chrome (nav, header, footer, aside), scripts and code are skipped. When the
-// classifier-driven extractor (squirrelscan/repo#2359) lands, it replaces the
+// classifier-driven extractor lands, it replaces the
 // root and block segmentation here; the view's shape stays the same.
 
 import type { Document, Element, Node } from "linkedom";

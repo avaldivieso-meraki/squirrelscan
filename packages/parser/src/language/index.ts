@@ -1,4 +1,4 @@
-// Content-language detection (squirrelscan/repo#2360). The benchmark helpers in
+// Content-language detection. The benchmark helpers in
 // ./benchmark.ts are deliberately not re-exported: they are a measurement tool
 // for benchmarks/harness/content-language.ts, not part of the product.
 

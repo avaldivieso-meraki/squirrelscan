@@ -1,6 +1,5 @@
-// Content-language detection behind the LanguageDetector interface
-// (squirrelscan/repo#2360): the floor wrapper abstains on short and
-// low-confidence text, the franc detector names the language of plain prose,
+// Content-language detection behind the LanguageDetector interface: the floor
+// wrapper abstains on short and low-confidence text, the franc detector names the language of plain prose,
 // and the per-page view is lazy, memoised and reads only the main content.
 // Every sample sentence here was written for this test.
 

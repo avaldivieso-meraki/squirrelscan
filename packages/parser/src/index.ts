@@ -95,5 +95,5 @@ export function parseDocument(
   return document;
 }
 
-// Content-language detection over page text (squirrelscan/repo#2360)
+// Content-language detection over page text
 export * from "./language";

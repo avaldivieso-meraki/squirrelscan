@@ -1,5 +1,5 @@
 // franc (MIT, https://github.com/wooorm/franc) behind the LanguageDetector
-// interface (squirrelscan/repo#2360). franc is a trigram detector over 187
+// interface. franc is a trigram detector over 187
 // languages; it returns ISO 639-3 codes and, per language, a score normalised so
 // the best match is 1.
 

@@ -1048,7 +1048,7 @@ export class RuleRunner {
         const allChecks: CheckResult[] = [];
         const fannedChecks = opts?.fannedRuleChecks;
         // One lazy view per page, shared by its rules: detection runs at most
-        // once, and only if a rule reads it (#2360).
+        // once, and only if a rule reads it.
         const contentLanguage = createContentLanguageView(parsed);
         for (const rule of pageRules) {
           const ctx: RuleContext = {

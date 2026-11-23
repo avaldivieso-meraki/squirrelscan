@@ -1,5 +1,5 @@
 // Content-language detection: the interface every detector implements, the
-// abstention floor, and tag normalisation (squirrelscan/repo#2360).
+// abstention floor, and tag normalisation.
 //
 // This is about the language a page is WRITTEN in, read from its text. The
 // declared language (`<html lang>`, `meta content-language`) is
@@ -28,7 +28,7 @@ export interface LanguageDetector {
  * Lowest confidence at which a detection is reported; below it the detector
  * abstains (returns null).
  *
- * TBD (squirrelscan/repo#2360): PLACEHOLDER value pending the corpus benchmark.
+ * TBD: PLACEHOLDER value pending the corpus benchmark.
  * Run `bun benchmarks/harness/content-language.ts <corpus-dir>` where the
  * corpus lives and set this to the reported `suggestedFloor.minConfidence`.
  */
@@ -39,7 +39,7 @@ export const CONTENT_LANGUAGE_MIN_CONFIDENCE = 0.02;
  * attempted on; shorter text abstains. Trigram detectors are unreliable on a
  * few words.
  *
- * TBD (squirrelscan/repo#2360): PLACEHOLDER value pending the corpus benchmark
+ * TBD: PLACEHOLDER value pending the corpus benchmark
  * (`suggestedFloor.minChars`).
  */
 export const CONTENT_LANGUAGE_MIN_CHARS = 40;

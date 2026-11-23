@@ -921,9 +921,8 @@ export interface RuleContext {
   parsed: ParsedPage;
 
   /**
-   * The language the page is written in, detected from its main content text
-   * (squirrelscan/repo#2360): `page()` for the whole main content, `blocks()`
-   * per block, each `{ lang, confidence }` or null where the detector abstains
+   * The language the page is written in, detected from its main content text:
+   * `page()` for the whole main content, `blocks()` per block, each `{ lang, confidence }` or null where the detector abstains
    * (short text, low confidence). Lazy and memoised per page, so a run whose
    * rules never read it pays nothing. Page rules only; undefined elsewhere
    * (site rules, tests, embedders), which a rule reads as "not detected".

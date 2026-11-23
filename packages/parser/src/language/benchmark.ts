@@ -1,5 +1,5 @@
-// Aggregate-only benchmark for content-language detectors
-// (squirrelscan/repo#2360). Driven by benchmarks/harness/content-language.ts.
+// Aggregate-only benchmark for content-language detectors. Driven by
+// benchmarks/harness/content-language.ts.
 //
 // PRIVACY CONTRACT: the report holds counts, rates, latencies and language codes
 // only. It never carries page text, URLs, hosts, file names or any per-sample

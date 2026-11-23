@@ -1,5 +1,5 @@
-// The content-language benchmark script (benchmarks/harness/content-language.ts,
-// squirrelscan/repo#2360) on a tiny synthetic corpus written for this test. The
+// The content-language benchmark script (benchmarks/harness/content-language.ts)
+// on a tiny synthetic corpus written for this test. The
 // report must be aggregate-only: no page text, URLs, hosts, file names or
 // per-sample labels, because it is published from a private corpus.
 

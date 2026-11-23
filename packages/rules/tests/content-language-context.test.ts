@@ -1,6 +1,5 @@
-// Page rules read the detected content language from the rule context
-// (squirrelscan/repo#2360): `ctx.contentLanguage` is set for every page rule,
-// one lazy view per page shared by its rules, distinct from the declared
+// Page rules read the detected content language from the rule context:
+// `ctx.contentLanguage` is set for every page rule, one lazy view per page shared by its rules, distinct from the declared
 // `<html lang>`. The sample text was written for this test.
 
 import type { ContentLanguageView } from "@squirrelscan/parser";

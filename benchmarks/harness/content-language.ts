@@ -1,4 +1,4 @@
-// Content-language detector benchmark (squirrelscan/repo#2360). Usage:
+// Content-language detector benchmark. Usage:
 //   bun benchmarks/harness/content-language.ts <corpus-dir> [--out=report.json]
 //     [--table] [--target=0.95] [--detector=<module>]...
 //
